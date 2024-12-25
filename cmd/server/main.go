@@ -3,30 +3,44 @@ package main
 import (
     "log"
     "net/http"
-    "github.com/gorilla/mux"
+    "github.com/go-chi/chi/v5"
+    "github.com/go-chi/chi/v5/middleware"
     "github.com/auto-blog/internal/handlers"
 )
 
 func main() {
-    r := mux.NewRouter()
+    r := chi.NewRouter()
+    
+    // Middleware
+    r.Use(middleware.Logger)
+    r.Use(middleware.Recoverer)
     
     // Serve static files
-    r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
+    r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("internal/static"))))
     
     // Blog routes
-    r.HandleFunc("/", handlers.HomeHandler).Methods("GET")
-    r.HandleFunc("/post/{id}", handlers.PostHandler).Methods("GET")
-    r.HandleFunc("/category/{category}", handlers.CategoryHandler).Methods("GET")
-    r.HandleFunc("/tag/{tag}", handlers.TagHandler).Methods("GET")
+    r.Get("/", handlers.HomeHandler)
+    r.Get("/post/{id}", handlers.PostHandler)
+    r.Get("/category/{category}", handlers.CategoryHandler)
+    r.Get("/tag/{tag}", handlers.TagHandler)
     
     // Admin routes
-    r.HandleFunc("/admin", handlers.AdminHandler).Methods("GET")
-    r.HandleFunc("/admin/post/new", handlers.NewPostHandler).Methods("GET", "POST")
-    r.HandleFunc("/admin/categories", handlers.CategoriesHandler).Methods("GET", "POST")
-    r.HandleFunc("/admin/tags", handlers.TagsHandler).Methods("GET", "POST")
+    r.Get("/admin", handlers.AdminHandler)
+    r.Route("/admin/post/new", func(r chi.Router) {
+        r.Get("/", handlers.NewPostHandler)
+        r.Post("/", handlers.NewPostHandler)
+    })
+    r.Route("/admin/categories", func(r chi.Router) {
+        r.Get("/", handlers.CategoriesHandler)
+        r.Post("/", handlers.CategoriesHandler)
+    })
+    r.Route("/admin/tags", func(r chi.Router) {
+        r.Get("/", handlers.TagsHandler)
+        r.Post("/", handlers.TagsHandler)
+    })
     
     // Theme toggle
-    r.HandleFunc("/toggle-theme", handlers.ToggleThemeHandler).Methods("POST")
+    r.Post("/toggle-theme", handlers.ToggleThemeHandler)
     
     log.Println("Server starting on :8080")
     log.Fatal(http.ListenAndServe(":8080", r))

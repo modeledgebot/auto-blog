@@ -1,0 +1,44 @@
+{{define "content"}}
+<div class="blog-layout">
+    <!-- Main navigation -->
+    <nav class="categories-nav">
+        <h2>Categories</h2>
+        {{range .Navigation.Categories}}
+        <div class="category">
+            <a href="/category/{{.ID}}">{{.Name}}</a>
+            <span class="description">{{.Description}}</span>
+        </div>
+        {{end}}
+    </nav>
+
+    <!-- Main content area -->
+    <main class="posts">
+        <h1>Recent Posts</h1>
+        {{range .Navigation.Recent}}
+        <article class="post-summary">
+            <h2><a href="/post/{{.ID}}">{{.Title}}</a></h2>
+            <div class="metadata">
+                <span class="category">{{.Category.Name}}</span>
+                <span class="date">{{.CreatedAt.Format "Jan 02, 2006"}}</span>
+            </div>
+            <p>{{.Summary}}</p>
+            <div class="tags">
+                {{range .Tags}}
+                <a href="/tag/{{.Name}}" class="tag">{{.Name}} ({{.Count}})</a>
+                {{end}}
+            </div>
+        </article>
+        {{end}}
+    </main>
+
+    <!-- Tag cloud sidebar -->
+    <aside class="tag-cloud">
+        <h2>Popular Tags</h2>
+        {{range $tag, $count := .Navigation.TagCloud}}
+        <a href="/tag/{{$tag}}" class="tag" style="font-size: {{tagSize $count}}em">
+            {{$tag}} ({{$count}})
+        </a>
+        {{end}}
+    </aside>
+</div>
+{{end}}
